@@ -1,13 +1,11 @@
 {
   "name": "Smart POS",
   "short_name": "SmartPOS",
-  "description": "Smart POS — PWA with barcode scanner and Google Sheets backend",
   "start_url": "/fpos/",
   "scope": "/fpos/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#2E8B57",
-  "orientation": "portrait-primary",
   "icons": [
     {
       "src": "/fpos/assets/icons/green-192.png",
@@ -27,4 +25,3 @@
     }
   ]
 }
-
