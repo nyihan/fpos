@@ -1,27 +1,16 @@
 {
   "name": "Smart POS",
   "short_name": "SmartPOS",
+  "description": "Smart POS — PWA with barcode scanner and Google Sheets backend",
   "start_url": "/fpos/",
   "scope": "/fpos/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#2E8B57",
   "icons": [
-    {
-      "src": "/fpos/assets/icons/green-192.png",
-      "sizes": "192x192",
-      "type": "image/png"
-    },
-    {
-      "src": "/fpos/assets/icons/green-512.png",
-      "sizes": "512x512",
-      "type": "image/png"
-    },
-    {
-      "src": "/fpos/assets/icons/green-maskable.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable"
-    }
+    { "src": "/fpos/assets/icons/green-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/fpos/assets/icons/green-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/fpos/assets/icons/green-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ]
 }
+
