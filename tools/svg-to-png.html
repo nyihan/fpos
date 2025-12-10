@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>SVG → PNG Converter</title></head>
+<body style="font-family:sans-serif;padding:18px;">
+  <h2>SVG → PNG Converter</h2>
+  <p>Choose master SVG and export PNG sizes (192, 512, maskable).</p>
+  <input id="svgFile" type="file" accept=".svg"><br><br>
+  <button onclick="convert(192,false)">Export 192px</button>
+  <button onclick="convert(512,false)">Export 512px</button>
+  <button onclick="convert(512,true)">Export Maskable 512px</button>
+  <canvas id="canvas" style="display:none;"></canvas>
+<script>
+function convert(size, maskable){
+  const f = document.getElementById('svgFile').files[0];
+  if(!f) return alert('Select SVG first');
+  const r = new FileReader();
+  r.onload = function(e){
+    const svgText = e.target.result;
+    const img = new Image();
+    img.onload = function(){
+      const canvas = document.getElementById('canvas');
+      canvas.width = size; canvas.height = size;
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0,0,size,size);
+      ctx.drawImage(img,0,0,size,size);
+      const a = document.createElement('a');
+      a.download = maskable ? 'icon-maskable-'+size+'.png' : 'icon-'+size+'.png';
+      a.href = canvas.toDataURL('image/png');
+      a.click();
+    };
+    img.src = 'data:image/svg+xml;base64,' + btoa(svgText);
+  };
+  r.readAsText(f);
+}
+</script>
+</body>
+</html>
