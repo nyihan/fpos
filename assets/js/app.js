@@ -1,3 +1,17 @@
+// -----------------------------
+// FIX: Icon Preview Updater
+// -----------------------------
+function updateIconPreview() {
+  const preview = document.getElementById('iconPreview');
+  if (!preview) return; // no preview element in this page
+
+  const theme = (SETTINGS && SETTINGS.theme) ? SETTINGS.theme : 'green';
+
+  // If hosted on GitHub Pages: change to '/fpos/assets/icons/...'
+  // If hosted locally: './assets/icons/...'
+  preview.src = `./assets/icons/${theme}-192.png`;
+}
+
 /* =====================================================================
    SMART POS - app.js (Full)
    - Settings (localStorage)
