@@ -1,445 +1,160 @@
 <!DOCTYPE html>
 <html lang="en">
-  <!-- PWA base root for GitHub Pages repo (important for absolute asset paths) -->
-<script>
-  // If you change repo name, update this path. For nyihan/fpos it's '/fpos'
-  window.__SMARTPOS_BASE_ROOT__ = '/fpos';
-</script>
-
-<!-- link to manifest (absolute path under repo) -->
-<link rel="manifest" href="/fpos/pwa/manifest.json">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Smart POS</title>
-<script>
-  // Fix GitHub Pages base path
-  window.__SMARTPOS_BASE_ROOT__ = '/fpos';
-</script>
 
-<!-- Correct manifest path -->
-<link rel="manifest" href="/fpos/pwa/manifest.json">
+  <!-- BASE ROOT (very important for GitHub Pages + PWA) -->
+  <script>
+    window.__SMARTPOS_BASE_ROOT__ = '/fpos';
+  </script>
 
-  <!-- PWA manifest -->
-  <link rel="manifest" href="./pwa/manifest.json">
+  <!-- Manifest -->
+  <link rel="manifest" href="/fpos/pwa/manifest.json">
 
-  <!-- iOS support -->
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-title" content="Smart POS">
-  <link rel="apple-touch-icon" href="./assets/icons/green-192.png">
+  <!-- Theme CSS -->
+  <link rel="stylesheet" href="/fpos/assets/css/theme.css">
 
-  <!-- Google Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
-
-  <!-- Core CSS (external) -->
-  <link rel="stylesheet" href="./assets/css/theme.css">
-
-  <!-- Sortable and html5-qrcode + html2canvas are used by app.js -->
-  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js" defer></script>
-  <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js" defer></script>
-  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js" defer></script>
-
+  <!-- App style -->
   <style>
-    /* small pre-CSS to avoid flash */
-    body { margin:0; font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; background:#f5f5f5; }
+    body {
+      margin: 0;
+      background: #f8f8f8;
+      font-family: sans-serif;
+    }
+    header {
+      background: #2E8B57;
+      padding: 15px;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 20px;
+    }
+    .container {
+      padding: 15px;
+    }
+    .nav-btn {
+      font-size: 24px;
+      cursor: pointer;
+    }
+    .item-row, .cart-row {
+      background: #fff;
+      padding: 12px;
+      margin-bottom: 10px;
+      border-radius: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .btn {
+      padding: 8px 14px;
+      background: #2E8B57;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .btn-red {
+      background: #c0392b;
+    }
+    .settings-panel {
+      background: white;
+      padding: 15px;
+      margin-top: 25px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    #toast {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 12px 20px;
+      background: black;
+      color: white;
+      border-radius: 6px;
+      opacity: 0;
+      transition: 0.3s;
+    }
+    #toast.show {
+      opacity: 1;
+    }
   </style>
 </head>
+
 <body>
 
-  <!-- HEADER -->
-  <header id="topHeader">
-    <div class="header-left">
-      <button id="menuBtn" class="btn small" aria-label="menu">☰</button>
-      <div class="header-title">Smart POS</div>
-    </div>
-    <div class="header-right">
-      <div id="headerTotal" class="header-total">Ks 0</div>
-      <button id="quickAddFloating" class="btn small" title="Quick add item">＋</button>
-    </div>
-  </header>
+<header>
+  <span>🍀 Smart POS</span>
+  <span class="nav-btn" onclick="toggleMenu()">☰</span>
+</header>
 
-  <!-- MAIN APPLICATION -->
-  <main id="app">
-    <!-- HOME TAB -->
-    <section id="tab-home" class="tab active">
-      <div class="search-row">
-        <select id="categoryFilter"></select>
-        <input id="searchBox" type="text" placeholder="Search items..." />
-        <button id="scanBtn" class="btn scan-btn">Scan</button>
-      </div>
+<div class="container">
 
-      <div class="content-row">
-        <div class="items-panel">
-          <div id="itemList" class="item-list">
-            <!-- items injected by app.js -->
-          </div>
-        </div>
+  <!-- TOTAL -->
+  <h2>Total: Ks <span id="totalAmount">0</span></h2>
 
-        <aside class="cart-panel">
-          <div class="cart-header">
-            <span>Cart</span>
-            <span id="cartCount">0 items</span>
-          </div>
-
-          <div id="cartItems" class="cart-items">
-            <!-- cart item rows injected -->
-          </div>
-
-          <div class="cart-bottom">
-            <div class="cart-total">
-              <div>Total</div>
-              <div id="cartTotalDisplay">Ks 0</div>
-            </div>
-            <button id="checkoutBtn" class="btn checkout-btn">Checkout</button>
-          </div>
-        </aside>
-      </div>
-    </section>
-
-    <!-- ITEMS MANAGEMENT TAB -->
-    <section id="tab-items" class="tab">
-      <div class="items-manage-header">
-        <h2>Manage Items</h2>
-        <div class="manage-controls">
-          <button id="addItemBtn" class="btn">+ Add Item</button>
-          <button id="saveOrderBtn" class="btn">Save Order</button>
-        </div>
-      </div>
-      <div id="sortableItems" class="sortable-items"></div>
-    </section>
-
-    <!-- SETTINGS TAB (opens bottom sheet) -->
-    <section id="tab-settings" class="tab">
-      <div class="settings-intro">
-        <h2>Settings</h2>
-        <p>Open the bottom sheet to edit theme, shop info, scanner options and API link.</p>
-        <button id="openSettingsBtn" class="btn">Open Settings</button>
-      </div>
-    </section>
-  </main>
-
-  <!-- BOTTOM NAV -->
-  <nav id="bottomNav">
-    <button data-tab="home" class="nav-btn active"><span class="nav-icon">⌂</span><span class="nav-text">Home</span></button>
-    <button data-tab="items" class="nav-btn"><span class="nav-icon">☰</span><span class="nav-text">Items</span></button>
-    <button data-tab="settings" class="nav-btn"><span class="nav-icon">⚙</span><span class="nav-text">Settings</span></button>
-  </nav>
-
-  <!-- SETTINGS BOTTOM SHEET -->
-  <div id="settingsSheetBackdrop" class="sheet-backdrop hidden"></div>
-  <div id="settingsSheet" class="settings-sheet hidden">
-    <div class="sheet-handle"></div>
-    <h2 class="sheet-title">Smart POS Settings</h2>
-
-    <!-- Shop info -->
-    <div class="sheet-section">
-      <h3>Shop Information</h3>
-      <label>Shop Name</label>
-      <input id="shopNameInput" type="text" placeholder="Smart POS">
-      <label>Phone Number</label>
-      <input id="shopPhoneInput" type="text" placeholder="09-XXXXXXXX">
-      <label>Thank You Message</label>
-      <input id="shopThanksInput" type="text" placeholder="Thank you!">
-    </div>
-
-    <!-- Theme -->
-    <div class="sheet-section">
-      <h3>Theme</h3>
-      <div class="theme-options">
-        <div class="theme-tile" data-theme="green" title="Green"></div>
-        <div class="theme-tile" data-theme="blue" title="Blue"></div>
-        <div class="theme-tile" data-theme="orange" title="Orange"></div>
-        <div class="theme-tile" data-theme="black" title="Black"></div>
-      </div>
-    </div>
-
-    <!-- App Icon Preview & Apply -->
-    <div class="sheet-section">
-      <h3>App Icon Preview</h3>
-      <div style="display:flex;align-items:center;gap:12px;">
-        <img id="iconPreview" src="./assets/icons/green-192.png" width="84" height="84" style="border-radius:18px;" alt="Icon preview">
-        <div style="flex:1">
-          <div style="font-size:13px; color:#666">Current icon set follows theme. Tap Apply to update SW cache.</div>
-          <button id="applyIconUpdate" class="btn" style="margin-top:10px;">Apply Icon Update</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Scanner options -->
-    <div class="sheet-section">
-      <h3>Scanner Options</h3>
-      <label class="switch-row"><span>Sound</span><input id="toggleSound" type="checkbox" checked></label>
-      <label class="switch-row"><span>Vibration</span><input id="toggleVibration" type="checkbox" checked></label>
-      <label class="switch-row"><span>Auto Continue Scan</span><input id="toggleAutoScan" type="checkbox" checked></label>
-    </div>
-
-    <!-- API / Page link (user sets API URL here) -->
-    <div class="sheet-section">
-      <h3>API / App Link</h3>
-      <div style="display:flex;gap:8px;align-items:center;">
-        <input id="apiLinkInput" type="text" readonly
-          style="flex:1;padding:10px;border-radius:8px;border:1px solid var(--theme-border);background:#fafafa;font-size:14px;"
-          placeholder="Set API URL in settings (paste your Apps Script Web App URL)">
-        <button id="copyApiLinkBtn" class="btn small" title="Copy API link">Copy</button>
-      </div>
-      <div style="margin-top:8px;display:flex;gap:8px;">
-        <button id="editApiBtn" class="btn small">Edit API</button>
-        <button id="copyPageUrlBtn" class="btn small">Copy Page URL</button>
-        <button id="openShareBtn" class="btn small">Share</button>
-      </div>
-      <div id="apiEditRow" style="margin-top:10px;display:none;gap:8px;">
-        <input id="apiEditInput" type="text" placeholder="https://script.google.com/macros/s/..../exec" style="flex:1;padding:8px;border-radius:8px;border:1px solid var(--theme-border);">
-        <button id="saveApiBtn" class="btn small">Save</button>
-      </div>
-    </div>
-
-    <!-- PWA -->
-    <div class="sheet-section">
-      <h3>PWA</h3>
-      <button id="pwaUpdateBtn" class="btn pwa-update-btn">Check for Update</button>
-    </div>
-
-    <div style="height:16px;"></div>
-    <button id="closeSettingsSheet" class="btn close-settings-btn">Close</button>
+  <!-- Scan -->
+  <div style="display:flex; gap:10px;">
+    <input id="searchBox" placeholder="Search items…" style="flex:1; padding:10px; border:1px solid #ccc; border-radius:6px;">
+    <button class="btn" onclick="openScanner()">Scan</button>
   </div>
 
-  <!-- SCANNER MODAL -->
-  <div id="scannerModal" class="modal hidden" aria-hidden="true">
-    <div class="modal-inner">
-      <div class="modal-header">
-        <strong>Scan barcode</strong>
-        <button id="closeScannerBtn" class="btn small">✕</button>
-      </div>
-      <div id="qrReader" style="width:100%;max-width:360px;margin:12px auto;"></div>
-      <div class="modal-footer">
-        <button id="pauseScanBtn" class="btn">Pause</button>
-        <button id="resumeScanBtn" class="btn">Resume</button>
-      </div>
-    </div>
+  <!-- Items List -->
+  <h3>Items</h3>
+  <div id="itemsList"></div>
+
+  <!-- Cart -->
+  <h3>Cart</h3>
+  <div id="cartList"></div>
+
+  <button class="btn" style="width:100%; margin-top:10px;" onclick="checkout()">Checkout</button>
+
+
+  <!-- SETTINGS -->
+  <div class="settings-panel">
+    <h3>Settings</h3>
+
+    <label>API URL</label>
+    <input id="apiURL" placeholder="https://script.google.com/macros/s/xxxx/exec"
+           style="width:100%; padding:10px; margin-top:5px;">
+
+    <label>Shop Name</label>
+    <input id="shopName" placeholder="Smart POS"
+           style="width:100%; padding:10px; margin-top:5px;">
+
+    <label>Phone</label>
+    <input id="shopPhone" placeholder="09-XXXXXXX"
+           style="width:100%; padding:10px; margin-top:5px;">
+
+    <label>Thanks Message</label>
+    <input id="thanksMsg" placeholder="Thank you!"
+           style="width:100%; padding:10px; margin-top:5px;">
+
+    <button class="btn" style="margin-top:10px;" onclick="saveSettings()">Save</button>
   </div>
 
-  <!-- QUICK ADD MODAL -->
-  <div id="quickAddModal" class="modal hidden" aria-hidden="true">
-    <div class="modal-inner">
-      <div class="modal-header">
-        <strong>Quick Add Item</strong>
-        <button id="closeQuickAdd" class="btn small">✕</button>
-      </div>
-      <div class="modal-body">
-        <label>Item Name</label>
-        <input id="quickName" type="text" placeholder="e.g. Bread">
-        <label>Price</label>
-        <input id="quickPrice" type="number" placeholder="0">
-        <label>SKU / Barcode (optional)</label>
-        <input id="quickSku" type="text" placeholder="e.g. 0123456789012">
-        <label>Category (optional)</label>
-        <input id="quickCategory" type="text" placeholder="Snacks">
-      </div>
-      <div class="modal-footer">
-        <button id="quickAddSave" class="btn green">Add & Add to Cart</button>
-      </div>
-    </div>
-  </div>
+</div>
 
-  <!-- RECEIPT MODAL -->
-  <div id="receiptModal" class="modal hidden" aria-hidden="true">
-    <div class="modal-inner receipt-panel">
-      <div class="receipt-header">
-        <div class="receipt-brand">
-          <div class="receipt-title" id="receiptShopName">Smart POS</div>
-          <div class="receipt-phone" id="receiptPhone">09-XXXXXXXX</div>
-        </div>
-        <button id="closeReceiptBtn" class="btn small">✕</button>
-      </div>
+<!-- Toast -->
+<div id="toast"></div>
 
-      <div class="receipt-body" id="receiptBody">
-        <div class="receipt-meta">
-          <div>Invoice: <strong id="receiptInvoiceId">INV-0001</strong></div>
-          <div id="receiptDate">2025-12-08 12:34</div>
-        </div>
+<!-- Barcode Scanner Library -->
+<script src="https://unpkg.com/html5-qrcode"></script>
 
-        <div class="receipt-items" id="receiptItems"></div>
+<!-- SmartPOS JS -->
+<script src="/fpos/assets/js/app.js"></script>
 
-        <div class="receipt-total">
-          <div class="label">TOTAL</div>
-          <div class="amount" id="receiptTotal">Ks 0</div>
-        </div>
-
-        <div class="receipt-footer" id="receiptThanks">Thank you!</div>
-      </div>
-
-      <div class="modal-footer">
-        <button id="saveReceiptJpg" class="btn">Save JPG</button>
-        <button id="printReceipt" class="btn">Print</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- TOAST -->
-  <div id="toast" class="toast hidden"></div>
-
-  <!-- audio -->
-  <audio id="beepAudio" preload="auto">
-    <source src="./assets/sound/beep.mp3" type="audio/mpeg">
-  </audio>
-  <audio id="errorAudio" preload="auto">
-    <source src="./assets/sound/error.mp3" type="audio/mpeg">
-  </audio>
-
-  <!-- APP SCRIPT (main logic in external file) -->
-  <script>
-    // Basic tab navigation init (safe fallback if app.js hasn't loaded yet)
-    (function initTabNavigation(){
-      document.addEventListener('DOMContentLoaded', () => {
-        const navButtons = document.querySelectorAll('#bottomNav .nav-btn');
-        const tabs = document.querySelectorAll('.tab');
-        navButtons.forEach(btn => btn.addEventListener('click', () => {
-          const target = btn.getAttribute('data-tab');
-          navButtons.forEach(n => n.classList.remove('active'));
-          btn.classList.add('active');
-          tabs.forEach(t => t.classList.remove('active'));
-          const el = document.getElementById('tab-' + target);
-          if (el) el.classList.add('active');
-        }));
-      });
-    })();
-  </script>
-
-  <!-- Inline small helpers for API link editing & copy (so index.html alone gives this UI) -->
-  <script>
-    // Copy / edit API link helpers (API stored in localStorage under 'smartpos_api')
-    function setApiLinkInput() {
-      const input = document.getElementById("apiLinkInput");
-      if (!input) return;
-      const saved = localStorage.getItem("smartpos_api") || "";
-      input.value = saved || "";
-    }
-
-    async function copyToClipboard(text) {
-      try {
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-          await navigator.clipboard.writeText(text);
-        } else {
-          const ta = document.createElement('textarea');
-          ta.value = text;
-          document.body.appendChild(ta);
-          ta.select();
-          document.execCommand('copy');
-          document.body.removeChild(ta);
-        }
-        showToast('Copied to clipboard');
-      } catch (err) {
-        console.error('Copy failed', err);
-        showToast('Copy failed');
-      }
-    }
-
-    function initCopyButtons() {
-      const copyBtn = document.getElementById("copyApiLinkBtn");
-      const copyPageBtn = document.getElementById("copyPageUrlBtn");
-      const openShareBtn = document.getElementById("openShareBtn");
-      const editBtn = document.getElementById("editApiBtn");
-      const apiEditRow = document.getElementById("apiEditRow");
-      const saveApiBtn = document.getElementById("saveApiBtn");
-
-      if (copyBtn) copyBtn.onclick = () => {
-        const val = document.getElementById("apiLinkInput").value || location.href;
-        copyToClipboard(val);
-      };
-      if (copyPageBtn) copyPageBtn.onclick = () => copyToClipboard(location.href);
-      if (openShareBtn) openShareBtn.onclick = async () => {
-        if (navigator.share) {
-          try {
-            await navigator.share({ title: document.title, text: 'Open Smart POS', url: location.href });
-            showToast('Shared');
-          } catch (err) { showToast('Share cancelled'); }
-        } else copyToClipboard(location.href);
-      };
-
-      if (editBtn) {
-        editBtn.onclick = () => {
-          apiEditRow.style.display = apiEditRow.style.display === 'none' ? 'flex' : 'none';
-          document.getElementById('apiEditInput').value = localStorage.getItem("smartpos_api") || "";
-        };
-      }
-
-      if (saveApiBtn) {
-        saveApiBtn.onclick = () => {
-          const v = document.getElementById('apiEditInput').value.trim();
-          if (!v) {
-            showToast('API URL empty');
-            return;
-          }
-          localStorage.setItem('smartpos_api', v);
-          setApiLinkInput();
-          showToast('API saved');
-        };
-      }
-    }
-
-    // Simple toast used by small helpers (app.js also defines showToast - this is fallback)
-    function showToast(msg, time=1600) {
-      const t = document.getElementById('toast');
-      if (!t) return;
-      t.innerText = msg;
-      t.classList.remove('hidden');
-      t.classList.add('show');
-      setTimeout(()=>{ t.classList.remove('show'); setTimeout(()=>t.classList.add('hidden'),220); }, time);
-    }
-
-    document.addEventListener('DOMContentLoaded', () => {
-      setApiLinkInput();
-      initCopyButtons();
-    });
-  </script>
-
-  <!-- Main application JS (full app logic) -->
-  <script src="./assets/js/app.js" defer></script>
-
-  <!-- Service Worker registration -->
-  <script>
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', function() {
-        navigator.serviceWorker.register('./pwa/service-worker.js')
-          .then(function(reg) {
-            console.log('ServiceWorker registered with scope: ', reg.scope);
-            if (reg.waiting) document.dispatchEvent(new CustomEvent('swUpdated'));
-            reg.addEventListener('updatefound', () => {
-              const newWorker = reg.installing;
-              newWorker.addEventListener('statechange', () => {
-                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                  document.dispatchEvent(new CustomEvent('swUpdated'));
-                }
-              });
-            });
-          }).catch(function(e){
-            console.warn('SW registration failed:', e);
-          });
-      });
-    }
-
-    // When SW update found, show quick message (app.js can handle UI)
-    document.addEventListener('swUpdated', () => {
-      // notify user there's an update (app.js may show a nicer dialog)
-      showToast('New version available — please reload');
-    });
-  </script>
+<!-- SERVICE WORKER REGISTER -->
 <script>
-  if ('serviceWorker' in navigator) {
-    // register service worker with the repo scope
-    navigator.serviceWorker.register('/fpos/pwa/service-worker.js', { scope: '/fpos/' })
-      .then(function(reg) {
-        console.log('ServiceWorker registered with scope:', reg.scope);
-      })
-      .catch(function(err) {
-        console.warn('ServiceWorker registration failed:', err);
-      });
-
-    // helper: detect updated SW and notify (optional)
-    navigator.serviceWorker.addEventListener('controllerchange', function() {
-      console.log('Service worker controller changed');
-    });
-  }
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/fpos/pwa/service-worker.js', { scope: '/fpos/' })
+    .then(reg => console.log("SW registered:", reg.scope))
+    .catch(err => console.error("SW registration failed", err));
+}
 </script>
+
 </body>
 </html>
